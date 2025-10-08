@@ -85,7 +85,6 @@ export default defineNuxtConfig({
     '@nuxt/image',
 
     '@nuxt/icon',
-    'nuxt-echarts',
   ],
 
   content: {
