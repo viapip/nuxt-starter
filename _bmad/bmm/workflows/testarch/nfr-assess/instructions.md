@@ -231,13 +231,13 @@ This workflow performs a comprehensive assessment of non-functional requirements
 
    ```yaml
    nfr_assessment:
-     date: '2025-10-14'
+     date: 2025-10-14
      categories:
-       performance: 'PASS'
-       security: 'CONCERNS'
-       reliability: 'PASS'
-       maintainability: 'PASS'
-     overall_status: 'CONCERNS'
+       performance: PASS
+       security: CONCERNS
+       reliability: PASS
+       maintainability: PASS
+     overall_status: CONCERNS
      critical_issues: 0
      high_priority_issues: 1
      concerns: 2

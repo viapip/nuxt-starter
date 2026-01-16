@@ -46,65 +46,77 @@ API-first testing provides:
 
 ```typescript
 // tests/api/users.spec.ts
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test'
 
 // No page, no browser - just API
 test.describe('Users API', () => {
   test('should create user', async ({ request }) => {
     const response = await request.post('/api/users', {
       data: {
-        name: 'John Doe',
         email: 'john@example.com',
+        name: 'John Doe',
         role: 'user',
       },
-    });
+    })
 
-    expect(response.status()).toBe(201);
+    expect(response.status())
+      .toBe(201)
 
-    const user = await response.json();
-    expect(user.id).toBeDefined();
-    expect(user.name).toBe('John Doe');
-    expect(user.email).toBe('john@example.com');
-  });
+    const user = await response.json()
+    expect(user.id)
+      .toBeDefined()
+    expect(user.name)
+      .toBe('John Doe')
+    expect(user.email)
+      .toBe('john@example.com')
+  })
 
   test('should get user by ID', async ({ request }) => {
     // Create user first
     const createResponse = await request.post('/api/users', {
-      data: { name: 'Jane Doe', email: 'jane@example.com' },
-    });
-    const { id } = await createResponse.json();
+      data: { email: 'jane@example.com', name: 'Jane Doe' },
+    })
+    const { id } = await createResponse.json()
 
     // Get user
-    const getResponse = await request.get(`/api/users/${id}`);
-    expect(getResponse.status()).toBe(200);
+    const getResponse = await request.get(`/api/users/${id}`)
+    expect(getResponse.status())
+      .toBe(200)
 
-    const user = await getResponse.json();
-    expect(user.id).toBe(id);
-    expect(user.name).toBe('Jane Doe');
-  });
+    const user = await getResponse.json()
+    expect(user.id)
+      .toBe(id)
+    expect(user.name)
+      .toBe('Jane Doe')
+  })
 
   test('should return 404 for non-existent user', async ({ request }) => {
-    const response = await request.get('/api/users/non-existent-id');
-    expect(response.status()).toBe(404);
+    const response = await request.get('/api/users/non-existent-id')
+    expect(response.status())
+      .toBe(404)
 
-    const error = await response.json();
-    expect(error.code).toBe('USER_NOT_FOUND');
-  });
+    const error = await response.json()
+    expect(error.code)
+      .toBe('USER_NOT_FOUND')
+  })
 
   test('should validate required fields', async ({ request }) => {
     const response = await request.post('/api/users', {
       data: { name: 'Missing Email' }, // email is required
-    });
+    })
 
-    expect(response.status()).toBe(400);
+    expect(response.status())
+      .toBe(400)
 
-    const error = await response.json();
-    expect(error.code).toBe('VALIDATION_ERROR');
-    expect(error.details).toContainEqual(
-      expect.objectContaining({ field: 'email', message: expect.any(String) })
-    );
-  });
-});
+    const error = await response.json()
+    expect(error.code)
+      .toBe('VALIDATION_ERROR')
+    expect(error.details)
+      .toContainEqual(
+        expect.objectContaining({ field: 'email', message: expect.any(String) })
+      )
+  })
+})
 ```
 
 **Key Points**:
@@ -122,75 +134,94 @@ test.describe('Users API', () => {
 
 ```typescript
 // tests/api/orders.spec.ts
-import { test, expect } from '@seontechnologies/playwright-utils/api-request/fixtures';
-import { z } from 'zod';
+import { expect, test } from '@seontechnologies/playwright-utils/api-request/fixtures'
+import { z } from 'zod'
 
 // Define schema for type safety and validation
 const OrderSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string(),
+  createdAt: z.string()
+    .datetime(),
+  id: z.string()
+    .uuid(),
   items: z.array(
     z.object({
+      price: z.number()
+        .positive(),
       productId: z.string(),
-      quantity: z.number().positive(),
-      price: z.number().positive(),
+      quantity: z.number()
+        .positive(),
     })
   ),
-  total: z.number().positive(),
-  status: z.enum(['pending', 'processing', 'shipped', 'delivered']),
-  createdAt: z.string().datetime(),
-});
+  status: z.enum([
+    'pending',
+    'processing',
+    'shipped',
+    'delivered'
+  ]),
+  total: z.number()
+    .positive(),
+  userId: z.string(),
+})
 
-type Order = z.infer<typeof OrderSchema>;
+type Order = z.infer<typeof OrderSchema>
 
 test.describe('Orders API', () => {
   test('should create order with schema validation', async ({ apiRequest }) => {
-    const { status, body } = await apiRequest<Order>({
+    const { body, status } = await apiRequest<Order>({
+      body: {
+        items: [
+          { price: 29.99, productId: 'prod-1', quantity: 2 },
+          { price: 49.99, productId: 'prod-2', quantity: 1 },
+        ],
+        userId: 'user-123',
+      },
       method: 'POST',
       path: '/api/orders',
-      body: {
-        userId: 'user-123',
-        items: [
-          { productId: 'prod-1', quantity: 2, price: 29.99 },
-          { productId: 'prod-2', quantity: 1, price: 49.99 },
-        ],
-      },
       validateSchema: OrderSchema, // Validates response matches schema
-    });
+    })
 
-    expect(status).toBe(201);
-    expect(body.id).toBeDefined();
-    expect(body.status).toBe('pending');
-    expect(body.total).toBe(109.97); // 2*29.99 + 49.99
-  });
+    expect(status)
+      .toBe(201)
+    expect(body.id)
+      .toBeDefined()
+    expect(body.status)
+      .toBe('pending')
+    expect(body.total)
+      .toBe(109.97) // 2*29.99 + 49.99
+  })
 
   test('should handle server errors with retry', async ({ apiRequest }) => {
     // apiRequest retries 5xx errors by default
-    const { status, body } = await apiRequest({
+    const { body, status } = await apiRequest({
       method: 'GET',
       path: '/api/orders/order-123',
       retryConfig: {
         maxRetries: 3,
         retryDelay: 1000,
       },
-    });
+    })
 
-    expect(status).toBe(200);
-  });
+    expect(status)
+      .toBe(200)
+  })
 
   test('should list orders with pagination', async ({ apiRequest }) => {
-    const { status, body } = await apiRequest<{ orders: Order[]; total: number; page: number }>({
+    const { body, status } = await apiRequest<{ orders: Order[], total: number, page: number }>({
       method: 'GET',
+      params: { limit: 10, page: 1, status: 'pending' },
       path: '/api/orders',
-      params: { page: 1, limit: 10, status: 'pending' },
-    });
+    })
 
-    expect(status).toBe(200);
-    expect(body.orders).toHaveLength(10);
-    expect(body.total).toBeGreaterThan(10);
-    expect(body.page).toBe(1);
-  });
-});
+    expect(status)
+      .toBe(200)
+    expect(body.orders)
+      .toHaveLength(10)
+    expect(body.total)
+      .toBeGreaterThan(10)
+    expect(body.page)
+      .toBe(1)
+  })
+})
 ```
 
 **Key Points**:
@@ -208,86 +239,94 @@ test.describe('Orders API', () => {
 
 ```typescript
 // tests/api/service-integration.spec.ts
-import { test, expect } from '@seontechnologies/playwright-utils/fixtures';
+import { expect, test } from '@seontechnologies/playwright-utils/fixtures'
 
 test.describe('Service Integration', () => {
-  const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:3001';
-  const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://localhost:3002';
-  const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL || 'http://localhost:3003';
+  const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:3001'
+  const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://localhost:3002'
+  const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL || 'http://localhost:3003'
 
   test('order service should validate user exists', async ({ apiRequest }) => {
     // Create user in user-service
     const { body: user } = await apiRequest({
+      baseUrl: USER_SERVICE_URL,
+      body: { email: 'test@example.com', name: 'Test User' },
       method: 'POST',
       path: '/api/users',
-      baseUrl: USER_SERVICE_URL,
-      body: { name: 'Test User', email: 'test@example.com' },
-    });
+    })
 
     // Create order in order-service (should validate user via user-service)
-    const { status, body: order } = await apiRequest({
-      method: 'POST',
-      path: '/api/orders',
+    const { body: order, status } = await apiRequest({
       baseUrl: ORDER_SERVICE_URL,
       body: {
-        userId: user.id,
         items: [{ productId: 'prod-1', quantity: 1 }],
+        userId: user.id,
       },
-    });
+      method: 'POST',
+      path: '/api/orders',
+    })
 
-    expect(status).toBe(201);
-    expect(order.userId).toBe(user.id);
-  });
+    expect(status)
+      .toBe(201)
+    expect(order.userId)
+      .toBe(user.id)
+  })
 
   test('order service should reject invalid user', async ({ apiRequest }) => {
-    const { status, body } = await apiRequest({
-      method: 'POST',
-      path: '/api/orders',
+    const { body, status } = await apiRequest({
       baseUrl: ORDER_SERVICE_URL,
       body: {
-        userId: 'non-existent-user',
         items: [{ productId: 'prod-1', quantity: 1 }],
+        userId: 'non-existent-user',
       },
-    });
+      method: 'POST',
+      path: '/api/orders',
+    })
 
-    expect(status).toBe(400);
-    expect(body.code).toBe('INVALID_USER');
-  });
+    expect(status)
+      .toBe(400)
+    expect(body.code)
+      .toBe('INVALID_USER')
+  })
 
   test('order should decrease inventory', async ({ apiRequest, recurse }) => {
     // Get initial inventory
     const { body: initialInventory } = await apiRequest({
+      baseUrl: INVENTORY_SERVICE_URL,
       method: 'GET',
       path: '/api/inventory/prod-1',
-      baseUrl: INVENTORY_SERVICE_URL,
-    });
+    })
 
     // Create order
     await apiRequest({
-      method: 'POST',
-      path: '/api/orders',
       baseUrl: ORDER_SERVICE_URL,
       body: {
-        userId: 'user-123',
         items: [{ productId: 'prod-1', quantity: 2 }],
+        userId: 'user-123',
       },
-    });
+      method: 'POST',
+      path: '/api/orders',
+    })
 
     // Poll for inventory update (eventual consistency)
     const { body: updatedInventory } = await recurse(
-      () =>
-        apiRequest({
+      () => {
+        return apiRequest({
+          baseUrl: INVENTORY_SERVICE_URL,
           method: 'GET',
           path: '/api/inventory/prod-1',
-          baseUrl: INVENTORY_SERVICE_URL,
-        }),
-      (response) => response.body.quantity === initialInventory.quantity - 2,
-      { timeout: 10000, interval: 500 }
-    );
+        })
+      },
+      (response) => {
+        return response.body.quantity === initialInventory.quantity - 2
+      },
+      { interval: 500, timeout: 10000 }
+    )
 
-    expect(updatedInventory.quantity).toBe(initialInventory.quantity - 2);
-  });
-});
+    expect(updatedInventory.quantity)
+      .toBe(initialInventory.quantity - 2)
+  })
+})
 ```
 
 **Key Points**:
@@ -305,9 +344,9 @@ test.describe('Service Integration', () => {
 
 ```typescript
 // tests/api/graphql.spec.ts
-import { test, expect } from '@seontechnologies/playwright-utils/api-request/fixtures';
+import { expect, test } from '@seontechnologies/playwright-utils/api-request/fixtures'
 
-const GRAPHQL_ENDPOINT = '/graphql';
+const GRAPHQL_ENDPOINT = '/graphql'
 
 test.describe('GraphQL API', () => {
   test('should query users', async ({ apiRequest }) => {
@@ -320,23 +359,28 @@ test.describe('GraphQL API', () => {
           role
         }
       }
-    `;
+    `
 
-    const { status, body } = await apiRequest({
-      method: 'POST',
-      path: GRAPHQL_ENDPOINT,
+    const { body, status } = await apiRequest({
       body: {
         query,
         variables: { limit: 10 },
       },
-    });
+      method: 'POST',
+      path: GRAPHQL_ENDPOINT,
+    })
 
-    expect(status).toBe(200);
-    expect(body.errors).toBeUndefined();
-    expect(body.data.users).toHaveLength(10);
-    expect(body.data.users[0]).toHaveProperty('id');
-    expect(body.data.users[0]).toHaveProperty('name');
-  });
+    expect(status)
+      .toBe(200)
+    expect(body.errors)
+      .toBeUndefined()
+    expect(body.data.users)
+      .toHaveLength(10)
+    expect(body.data.users[0])
+      .toHaveProperty('id')
+    expect(body.data.users[0])
+      .toHaveProperty('name')
+  })
 
   test('should create user via mutation', async ({ apiRequest }) => {
     const mutation = `
@@ -347,27 +391,31 @@ test.describe('GraphQL API', () => {
           email
         }
       }
-    `;
+    `
 
-    const { status, body } = await apiRequest({
-      method: 'POST',
-      path: GRAPHQL_ENDPOINT,
+    const { body, status } = await apiRequest({
       body: {
         query: mutation,
         variables: {
           input: {
-            name: 'GraphQL User',
             email: 'graphql@example.com',
+            name: 'GraphQL User',
           },
         },
       },
-    });
+      method: 'POST',
+      path: GRAPHQL_ENDPOINT,
+    })
 
-    expect(status).toBe(200);
-    expect(body.errors).toBeUndefined();
-    expect(body.data.createUser.id).toBeDefined();
-    expect(body.data.createUser.name).toBe('GraphQL User');
-  });
+    expect(status)
+      .toBe(200)
+    expect(body.errors)
+      .toBeUndefined()
+    expect(body.data.createUser.id)
+      .toBeDefined()
+    expect(body.data.createUser.name)
+      .toBe('GraphQL User')
+  })
 
   test('should handle GraphQL errors', async ({ apiRequest }) => {
     const query = `
@@ -377,22 +425,26 @@ test.describe('GraphQL API', () => {
           name
         }
       }
-    `;
+    `
 
-    const { status, body } = await apiRequest({
-      method: 'POST',
-      path: GRAPHQL_ENDPOINT,
+    const { body, status } = await apiRequest({
       body: {
         query,
         variables: { id: 'non-existent' },
       },
-    });
+      method: 'POST',
+      path: GRAPHQL_ENDPOINT,
+    })
 
-    expect(status).toBe(200); // GraphQL returns 200 even for errors
-    expect(body.errors).toBeDefined();
-    expect(body.errors[0].message).toContain('not found');
-    expect(body.data.user).toBeNull();
-  });
+    expect(status)
+      .toBe(200) // GraphQL returns 200 even for errors
+    expect(body.errors)
+      .toBeDefined()
+    expect(body.errors[0].message)
+      .toContain('not found')
+    expect(body.data.user)
+      .toBeNull()
+  })
 
   test('should handle validation errors', async ({ apiRequest }) => {
     const mutation = `
@@ -401,27 +453,30 @@ test.describe('GraphQL API', () => {
           id
         }
       }
-    `;
+    `
 
-    const { status, body } = await apiRequest({
-      method: 'POST',
-      path: GRAPHQL_ENDPOINT,
+    const { body, status } = await apiRequest({
       body: {
         query: mutation,
         variables: {
           input: {
-            name: '', // Invalid: empty name
             email: 'invalid-email', // Invalid: bad format
+            name: '', // Invalid: empty name
           },
         },
       },
-    });
+      method: 'POST',
+      path: GRAPHQL_ENDPOINT,
+    })
 
-    expect(status).toBe(200);
-    expect(body.errors).toBeDefined();
-    expect(body.errors[0].extensions.code).toBe('BAD_USER_INPUT');
-  });
-});
+    expect(status)
+      .toBe(200)
+    expect(body.errors)
+      .toBeDefined()
+    expect(body.errors[0].extensions.code)
+      .toBe('BAD_USER_INPUT')
+  })
+})
 ```
 
 **Key Points**:
@@ -439,24 +494,24 @@ test.describe('GraphQL API', () => {
 
 ```typescript
 // tests/api/with-data-setup.spec.ts
-import { test, expect } from '@seontechnologies/playwright-utils/fixtures';
+import { expect, test } from '@seontechnologies/playwright-utils/fixtures'
 
 test.describe('Orders with Data Setup', () => {
-  let testUser: { id: string; email: string };
-  let testProducts: Array<{ id: string; name: string; price: number }>;
+  let testUser: { id: string, email: string }
+  let testProducts: { id: string, name: string, price: number }[]
 
   test.beforeAll(async ({ request }) => {
     // Seed user via API
     const userResponse = await request.post('/api/users', {
       data: {
-        name: 'Test User',
         email: `test-${Date.now()}@example.com`,
+        name: 'Test User',
       },
-    });
-    testUser = await userResponse.json();
+    })
+    testUser = await userResponse.json()
 
     // Seed products via API
-    testProducts = [];
+    testProducts = []
     for (const product of [
       { name: 'Widget A', price: 29.99 },
       { name: 'Widget B', price: 49.99 },
@@ -464,63 +519,72 @@ test.describe('Orders with Data Setup', () => {
     ]) {
       const productResponse = await request.post('/api/products', {
         data: product,
-      });
-      testProducts.push(await productResponse.json());
+      })
+      testProducts.push(await productResponse.json())
     }
-  });
+  })
 
   test.afterAll(async ({ request }) => {
     // Cleanup via API
     if (testUser?.id) {
-      await request.delete(`/api/users/${testUser.id}`);
+      await request.delete(`/api/users/${testUser.id}`)
     }
     for (const product of testProducts) {
-      await request.delete(`/api/products/${product.id}`);
+      await request.delete(`/api/products/${product.id}`)
     }
-  });
+  })
 
   test('should create order with seeded data', async ({ apiRequest }) => {
-    const { status, body } = await apiRequest({
-      method: 'POST',
-      path: '/api/orders',
+    const { body, status } = await apiRequest({
       body: {
-        userId: testUser.id,
         items: [
           { productId: testProducts[0].id, quantity: 2 },
           { productId: testProducts[1].id, quantity: 1 },
         ],
+        userId: testUser.id,
       },
-    });
+      method: 'POST',
+      path: '/api/orders',
+    })
 
-    expect(status).toBe(201);
-    expect(body.userId).toBe(testUser.id);
-    expect(body.items).toHaveLength(2);
-    expect(body.total).toBe(2 * 29.99 + 49.99);
-  });
+    expect(status)
+      .toBe(201)
+    expect(body.userId)
+      .toBe(testUser.id)
+    expect(body.items)
+      .toHaveLength(2)
+    expect(body.total)
+      .toBe(2 * 29.99 + 49.99)
+  })
 
   test('should list user orders', async ({ apiRequest }) => {
     // Create an order first
     await apiRequest({
+      body: {
+        items: [{ productId: testProducts[2].id, quantity: 1 }],
+        userId: testUser.id,
+      },
       method: 'POST',
       path: '/api/orders',
-      body: {
-        userId: testUser.id,
-        items: [{ productId: testProducts[2].id, quantity: 1 }],
-      },
-    });
+    })
 
     // List orders for user
-    const { status, body } = await apiRequest({
+    const { body, status } = await apiRequest({
       method: 'GET',
-      path: '/api/orders',
       params: { userId: testUser.id },
-    });
+      path: '/api/orders',
+    })
 
-    expect(status).toBe(200);
-    expect(body.orders.length).toBeGreaterThanOrEqual(1);
-    expect(body.orders.every((o: any) => o.userId === testUser.id)).toBe(true);
-  });
-});
+    expect(status)
+      .toBe(200)
+    expect(body.orders.length)
+      .toBeGreaterThanOrEqual(1)
+    expect(body.orders.every((o: any) => {
+      return o.userId === testUser.id
+    }))
+      .toBe(true)
+  })
+})
 ```
 
 **Key Points**:
@@ -538,87 +602,110 @@ test.describe('Orders with Data Setup', () => {
 
 ```typescript
 // tests/api/background-jobs.spec.ts
-import { test, expect } from '@seontechnologies/playwright-utils/fixtures';
+import { expect, test } from '@seontechnologies/playwright-utils/fixtures'
 
 test.describe('Background Jobs', () => {
   test('should process export job', async ({ apiRequest, recurse }) => {
     // Trigger export job
     const { body: job } = await apiRequest({
+      body: {
+        filters: { createdAfter: '2024-01-01' },
+        format: 'csv',
+        type: 'users',
+      },
       method: 'POST',
       path: '/api/exports',
-      body: {
-        type: 'users',
-        format: 'csv',
-        filters: { createdAfter: '2024-01-01' },
-      },
-    });
+    })
 
-    expect(job.id).toBeDefined();
-    expect(job.status).toBe('pending');
+    expect(job.id)
+      .toBeDefined()
+    expect(job.status)
+      .toBe('pending')
 
     // Poll until job completes
     const { body: completedJob } = await recurse(
-      () => apiRequest({ method: 'GET', path: `/api/exports/${job.id}` }),
-      (response) => response.body.status === 'completed',
+      () => {
+        return apiRequest({ method: 'GET', path: `/api/exports/${job.id}` })
+      },
+      (response) => {
+        return response.body.status === 'completed'
+      },
       {
-        timeout: 60000,
         interval: 2000,
         log: `Waiting for export job ${job.id} to complete`,
+        timeout: 60000,
       }
-    );
+    )
 
-    expect(completedJob.status).toBe('completed');
-    expect(completedJob.downloadUrl).toBeDefined();
-    expect(completedJob.recordCount).toBeGreaterThan(0);
-  });
+    expect(completedJob.status)
+      .toBe('completed')
+    expect(completedJob.downloadUrl)
+      .toBeDefined()
+    expect(completedJob.recordCount)
+      .toBeGreaterThan(0)
+  })
 
   test('should handle job failure gracefully', async ({ apiRequest, recurse }) => {
     // Trigger job that will fail
     const { body: job } = await apiRequest({
+      body: {
+        format: 'csv',
+        type: 'invalid-type', // This will cause failure
+      },
       method: 'POST',
       path: '/api/exports',
-      body: {
-        type: 'invalid-type', // This will cause failure
-        format: 'csv',
-      },
-    });
+    })
 
     // Poll until job fails
     const { body: failedJob } = await recurse(
-      () => apiRequest({ method: 'GET', path: `/api/exports/${job.id}` }),
-      (response) => ['completed', 'failed'].includes(response.body.status),
+      () => {
+        return apiRequest({ method: 'GET', path: `/api/exports/${job.id}` })
+      },
+      (response) => {
+        return ['completed', 'failed'].includes(response.body.status)
+      },
       { timeout: 30000 }
-    );
+    )
 
-    expect(failedJob.status).toBe('failed');
-    expect(failedJob.error).toBeDefined();
-    expect(failedJob.error.code).toBe('INVALID_EXPORT_TYPE');
-  });
+    expect(failedJob.status)
+      .toBe('failed')
+    expect(failedJob.error)
+      .toBeDefined()
+    expect(failedJob.error.code)
+      .toBe('INVALID_EXPORT_TYPE')
+  })
 
   test('should process webhook delivery', async ({ apiRequest, recurse }) => {
     // Trigger action that sends webhook
     const { body: order } = await apiRequest({
-      method: 'POST',
-      path: '/api/orders',
       body: {
-        userId: 'user-123',
         items: [{ productId: 'prod-1', quantity: 1 }],
+        userId: 'user-123',
         webhookUrl: 'https://webhook.site/test-endpoint',
       },
-    });
+      method: 'POST',
+      path: '/api/orders',
+    })
 
     // Poll for webhook delivery status
     const { body: webhookStatus } = await recurse(
-      () => apiRequest({ method: 'GET', path: `/api/webhooks/order/${order.id}` }),
-      (response) => response.body.delivered === true,
-      { timeout: 30000, interval: 1000 }
-    );
+      () => {
+        return apiRequest({ method: 'GET', path: `/api/webhooks/order/${order.id}` })
+      },
+      (response) => {
+        return response.body.delivered === true
+      },
+      { interval: 1000, timeout: 30000 }
+    )
 
-    expect(webhookStatus.delivered).toBe(true);
-    expect(webhookStatus.deliveredAt).toBeDefined();
-    expect(webhookStatus.responseStatus).toBe(200);
-  });
-});
+    expect(webhookStatus.delivered)
+      .toBe(true)
+    expect(webhookStatus.deliveredAt)
+      .toBeDefined()
+    expect(webhookStatus.responseStatus)
+      .toBe(200)
+  })
+})
 ```
 
 **Key Points**:
@@ -636,10 +723,10 @@ test.describe('Background Jobs', () => {
 
 ```typescript
 // tests/api/authenticated.spec.ts
-import { test, expect } from '@seontechnologies/playwright-utils/fixtures';
+import { expect, test } from '@seontechnologies/playwright-utils/fixtures'
 
 test.describe('Authenticated API Tests', () => {
-  let authToken: string;
+  let authToken: string
 
   test.beforeAll(async ({ request }) => {
     // Get token via API (no browser!)
@@ -648,64 +735,71 @@ test.describe('Authenticated API Tests', () => {
         email: process.env.TEST_USER_EMAIL,
         password: process.env.TEST_USER_PASSWORD,
       },
-    });
+    })
 
-    const { token } = await response.json();
-    authToken = token;
-  });
+    const { token } = await response.json()
+    authToken = token
+  })
 
   test('should access protected endpoint with token', async ({ apiRequest }) => {
-    const { status, body } = await apiRequest({
-      method: 'GET',
-      path: '/api/me',
+    const { body, status } = await apiRequest({
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
-    });
+      method: 'GET',
+      path: '/api/me',
+    })
 
-    expect(status).toBe(200);
-    expect(body.email).toBe(process.env.TEST_USER_EMAIL);
-  });
+    expect(status)
+      .toBe(200)
+    expect(body.email)
+      .toBe(process.env.TEST_USER_EMAIL)
+  })
 
   test('should reject request without token', async ({ apiRequest }) => {
-    const { status, body } = await apiRequest({
+    const { body, status } = await apiRequest({
       method: 'GET',
       path: '/api/me',
       // No Authorization header
-    });
+    })
 
-    expect(status).toBe(401);
-    expect(body.code).toBe('UNAUTHORIZED');
-  });
+    expect(status)
+      .toBe(401)
+    expect(body.code)
+      .toBe('UNAUTHORIZED')
+  })
 
   test('should reject expired token', async ({ apiRequest }) => {
-    const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Expired token
+    const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' // Expired token
 
-    const { status, body } = await apiRequest({
-      method: 'GET',
-      path: '/api/me',
+    const { body, status } = await apiRequest({
       headers: {
         Authorization: `Bearer ${expiredToken}`,
       },
-    });
+      method: 'GET',
+      path: '/api/me',
+    })
 
-    expect(status).toBe(401);
-    expect(body.code).toBe('TOKEN_EXPIRED');
-  });
+    expect(status)
+      .toBe(401)
+    expect(body.code)
+      .toBe('TOKEN_EXPIRED')
+  })
 
   test('should handle role-based access', async ({ apiRequest }) => {
     // User token (non-admin)
     const { status } = await apiRequest({
-      method: 'GET',
-      path: '/api/admin/users',
       headers: {
         Authorization: `Bearer ${authToken}`,
       },
-    });
+      method: 'GET',
+      path: '/api/admin/users',
+    })
 
-    expect(status).toBe(403); // Forbidden for non-admin
-  });
-});
+    expect(status)
+      .toBe(403) // Forbidden for non-admin
+  })
+})
 ```
 
 **Key Points**:
@@ -721,7 +815,7 @@ test.describe('Authenticated API Tests', () => {
 
 ```typescript
 // playwright.config.ts
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/api',
@@ -738,13 +832,13 @@ export default defineConfig({
   // Faster without browser overhead
   timeout: 30000,
 
+  fullyParallel: true,
   // Run API tests in parallel
   workers: 4,
-  fullyParallel: true,
 
   // No screenshots/traces needed for API tests
   reporter: [['html'], ['json', { outputFile: 'api-test-results.json' }]],
-});
+})
 ```
 
 ### Separate API Test Project
@@ -769,7 +863,7 @@ export default defineConfig({
       },
     },
   ],
-});
+})
 ```
 
 ## Comparison: API Tests vs E2E Tests
@@ -800,11 +894,12 @@ export default defineConfig({
 ```typescript
 // Bad: Testing API through UI
 test('validate user creation', async ({ page }) => {
-  await page.goto('/admin/users');
-  await page.fill('#name', 'John');
-  await page.click('#submit');
-  await expect(page.getByText('User created')).toBeVisible();
-});
+  await page.goto('/admin/users')
+  await page.fill('#name', 'John')
+  await page.click('#submit')
+  await expect(page.getByText('User created'))
+    .toBeVisible()
+})
 ```
 
 **DO test APIs directly:**
@@ -812,14 +907,16 @@ test('validate user creation', async ({ page }) => {
 ```typescript
 // Good: Direct API test
 test('validate user creation', async ({ apiRequest }) => {
-  const { status, body } = await apiRequest({
+  const { body, status } = await apiRequest({
+    body: { name: 'John' },
     method: 'POST',
     path: '/api/users',
-    body: { name: 'John' },
-  });
-  expect(status).toBe(201);
-  expect(body.id).toBeDefined();
-});
+  })
+  expect(status)
+    .toBe(201)
+  expect(body.id)
+    .toBeDefined()
+})
 ```
 
 **DON'T ignore API tests because "E2E covers it":**
@@ -834,10 +931,10 @@ test('validate user creation', async ({ apiRequest }) => {
 ```typescript
 // Good: Explicit API test suite
 test.describe('Users API', () => {
-  test('creates user', async ({ apiRequest }) => { /* ... */ });
-  test('handles duplicate email', async ({ apiRequest }) => { /* ... */ });
-  test('validates required fields', async ({ apiRequest }) => { /* ... */ });
-  test('handles malformed JSON', async ({ apiRequest }) => { /* ... */ });
-  test('rate limits requests', async ({ apiRequest }) => { /* ... */ });
-});
+  test('creates user', async ({ apiRequest }) => { /* ... */ })
+  test('handles duplicate email', async ({ apiRequest }) => { /* ... */ })
+  test('validates required fields', async ({ apiRequest }) => { /* ... */ })
+  test('handles malformed JSON', async ({ apiRequest }) => { /* ... */ })
+  test('rate limits requests', async ({ apiRequest }) => { /* ... */ })
+})
 ```

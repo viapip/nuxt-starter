@@ -109,7 +109,7 @@ b) **Update frontmatter:**
 ```yaml
 ---
 # ... existing values ...
-status: 'review'
+status: review
 stepsCompleted: [1, 2, 3]
 ---
 ```

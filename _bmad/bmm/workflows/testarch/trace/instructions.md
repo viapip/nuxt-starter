@@ -236,7 +236,7 @@ This phase focuses on mapping requirements to tests, analyzing coverage, and ide
        critical: 0
        high: 1
        medium: 2
-     status: 'PASS' # or "FAIL" if P0 < 100%
+     status: PASS # or "FAIL" if P0 < 100%
    ```
 
 3. Create coverage badge/metric (if enabled):

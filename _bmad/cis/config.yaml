@@ -3,9 +3,8 @@
 # Version: 6.0.0-alpha.23
 # Date: 2026-01-15T14:17:20.040Z
 
-
 # Core Configuration Values
 user_name: viapip
 communication_language: Russian
 document_output_language: English
-output_folder: "{project-root}/_bmad-output"
+output_folder: '{project-root}/_bmad-output'

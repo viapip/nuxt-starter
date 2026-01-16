@@ -128,14 +128,14 @@ development_status:
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: { date }
-project: { project_name }
-project_key: { project_key }
-tracking_system: { tracking_system }
-story_location: { story_location }
+generated: {date}
+project: {project_name}
+project_key: {project_key}
+tracking_system: {tracking_system}
+story_location: {story_location}
 
 development_status:
-  # All epics, stories, and retrospectives in order
+# All epics, stories, and retrospectives in order
 ```
 
 <action>Write the complete sprint status YAML to {status_file}</action>

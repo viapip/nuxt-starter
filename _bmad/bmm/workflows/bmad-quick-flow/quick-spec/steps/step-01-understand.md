@@ -136,7 +136,7 @@ a) **Create the tech-spec WIP file:**
    title: '{title}'
    slug: '{slug}'
    created: '{date}'
-   status: 'in-progress'
+   status: in-progress
    stepsCompleted: [1]
    tech_stack: []
    files_to_modify: []

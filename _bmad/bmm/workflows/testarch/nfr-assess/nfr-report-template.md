@@ -378,13 +378,13 @@ nfr_assessment:
     reliability: '{RELIABILITY_STATUS}'
     maintainability: '{MAINTAINABILITY_STATUS}'
   overall_status: '{OVERALL_STATUS}'
-  critical_issues: { CRITICAL_COUNT }
-  high_priority_issues: { HIGH_COUNT }
-  medium_priority_issues: { MEDIUM_COUNT }
-  concerns: { CONCERNS_COUNT }
-  blockers: { BLOCKER_BOOLEAN } # true/false
-  quick_wins: { QUICK_WIN_COUNT }
-  evidence_gaps: { EVIDENCE_GAP_COUNT }
+  critical_issues: {CRITICAL_COUNT}
+  high_priority_issues: {HIGH_COUNT}
+  medium_priority_issues: {MEDIUM_COUNT}
+  concerns: {CONCERNS_COUNT}
+  blockers: {BLOCKER_BOOLEAN} # true/false
+  quick_wins: {QUICK_WIN_COUNT}
+  evidence_gaps: {EVIDENCE_GAP_COUNT}
   recommendations:
     - '{RECOMMENDATION_1}'
     - '{RECOMMENDATION_2}'
