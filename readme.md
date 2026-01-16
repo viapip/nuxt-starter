@@ -1,54 +1,92 @@
-# Render Schema
+# Nuxt 4 Starter
 
-A modern web application built with Vue 3 and shadcn-vue components.
+Modern Nuxt 4 starter template with shadcn-vue, i18n, dark mode, and DevContainer support.
 
-## Tech Stack
+## ✨ Features
 
-- Nuxt
-- TypeScript
-- shadcn-vue
+- **Nuxt 4.1** with Vue 3.5 and TypeScript 5.9 (strict mode)
+- **Tailwind CSS 3.4** with shadcn-vue components (New York style)
+- **Internationalization** — English and Russian out of the box
+- **Dark mode** — toggle included, works instantly
+- **DevContainer** — ready for VS Code and GitHub Codespaces
+- **Nitro server** — async context, database, tasks, WebSocket support
 
-## Prerequisites
+## 🛠 Tech Stack
 
-- Node.js (v16 or higher)
-- Yarn
+| Category | Technology |
+|----------|------------|
+| Framework | Nuxt 4, Vue 3.5 |
+| Language | TypeScript 5.9 (strict) |
+| Styling | Tailwind CSS 3.4, shadcn-vue |
+| Icons | Nuxt Icon (Tabler collection) |
+| i18n | @nuxtjs/i18n |
+| Content | @nuxt/content |
+| Utilities | VueUse, Radix Vue |
 
-## Getting Started
+## 📋 Prerequisites
 
-1. Install dependencies:
+- **Node.js** 20+ (DevContainer uses Node 22)
+- **Yarn** 4.x (Yarn Berry)
+
+## 🚀 Quick Start
+
+### Local Development
+
 ```bash
+# Install dependencies
 yarn install
-```
 
-2. Start the development server:
-```bash
+# Start dev server
 yarn dev
 ```
 
-## shadcn-vue Components
+Open [http://localhost:3000](http://localhost:3000)
 
-This project uses [shadcn-vue](https://www.shadcn-vue.com/), a collection of reusable components built with Vue 3 and Tailwind CSS.
+### DevContainer (VS Code / Codespaces)
 
-### Adding New Components
+1. Open project in VS Code
+2. Click "Reopen in Container" when prompted
+3. Run `yarn dev` in the integrated terminal
 
-To add a new shadcn-vue component:
+## 📁 Project Structure
 
-1. Visit the [shadcn-vue documentation](https://www.shadcn-vue.com/docs/components/accordion)
-2. Find the component you want to add
-3. Run the add command:
-```bash
-npx shadcn-vue@latest add <component-name>
+```
+src/
+├── client/             # Frontend (Nuxt app)
+│   ├── app/            # app.vue (root component)
+│   ├── assets/         # CSS, images
+│   ├── components/     # Vue components
+│   │   └── ui/         # shadcn-vue components
+│   ├── layouts/        # Nuxt layouts
+│   ├── lib/            # Utilities (cn, etc.)
+│   ├── pages/          # Nuxt pages
+│   └── plugins/        # Nuxt plugins
+├── server/             # Nitro server
+│   └── errors/         # HTTP error helpers
+├── languages/          # i18n translations (en.yml, ru.yml)
+├── content/            # Nuxt Content files
+└── public/             # Static files
 ```
 
-For example, to add a button component:
+> **Note:** This template uses a non-standard structure with `src/client` for frontend code and `src/server` for Nitro. All paths are configured in `nuxt.config.ts`.
+
+## 🧩 Adding shadcn-vue Components
+
 ```bash
-npx shadcn-vue@latest add button
+npx shadcn-vue@1 add <component-name>
 ```
 
-### Using Components
+Example:
+```bash
+npx shadcn-vue@1 add button
+npx shadcn-vue@1 add dialog
+```
 
-Components are automatically added to your `components/ui` directory. You can import and use them in your Vue components like this:
+> **Note:** This project uses Tailwind CSS 3.4. Use `shadcn-vue@1` to ensure compatibility. Version 2.x+ requires Tailwind v4.
 
+Components are installed to `src/client/components/ui/`.
+
+Usage:
 ```vue
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
@@ -59,40 +97,40 @@ import { Button } from '@/components/ui/button'
 </template>
 ```
 
-### Customizing Components
+## 🌐 Internationalization
 
-Components can be customized by:
+Translation files are in `src/languages/`:
+- `en.yml` — English
+- `ru.yml` — Russian (default)
 
-1. Modifying the component file in `components/ui/`
-2. Adjusting the theme in `tailwind.config.js`
-3. Updating the global CSS variables in `src/assets/styles/globals.css`
-
-### Available Components
-
-The following components are currently available in this project:
-
-- Button
-- Input
-- Card
-- Dialog
-- Dropdown Menu
-- Form
-- Label
-- Select
-- Switch
-- Tabs
-- Toast
-- Tooltip
-
-To see the full list of available components, visit the [shadcn-vue documentation](https://www.shadcn-vue.com/docs/components/accordion).
-
-## Project Structure
-
+Usage in components:
+```vue
+<template>
+  <p>{{ $t('key') }}</p>
+</template>
 ```
-src/
-├── components/
-│   ├── ui/          # shadcn-vue components
-│   └── ...          # custom components
-├── lib/             # utility functions and configurations
-├── assets/          # static assets
-```
+
+Configuration in `nuxt.config.ts` under `i18n` section.
+
+## 🎨 Customization
+
+### Dark Mode
+
+Dark mode toggle is available via shadcn-vue's color mode. Theme variables are defined in CSS using HSL values.
+
+### Theming
+
+1. **CSS Variables** — Edit `src/client/assets/css/tailwind.css` for global theme tokens
+2. **Tailwind Config** — Modify `tailwind.config.js` for design system changes
+3. **Components** — Customize shadcn-vue components directly in `src/client/components/ui/`
+
+## 📜 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `yarn dev` | Start development server |
+| `yarn build` | Build for production |
+| `yarn preview` | Preview production build |
+| `yarn lint` | Lint and fix code |
+| `yarn typecheck` | Run TypeScript check |
+| `yarn clean` | Clean Nuxt cache |

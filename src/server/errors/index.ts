@@ -1,40 +1,40 @@
-// ErrNotFound is used to throw when a resource is not found
+// Throw when a resource is not found
 export const ErrNotFound = createError({
   statusCode: 404,
   statusMessage: 'Not found',
 })
 
-// ErrForbidden is used to throw when a resource is not found
+// Throw when access is denied
 export const ErrForbidden = createError({
   statusCode: 403,
   statusMessage: 'Forbidden',
 })
 
-// ErrUnauthorized is used to throw when a resource is not found
+// Throw when authentication is required
 export const ErrUnauthorized = createError({
   statusCode: 401,
   statusMessage: 'Unauthorized',
 })
 
-// ErrBadRequest is used to throw when a resource is not found
+// Throw when request is malformed
 export const ErrBadRequest = createError({
   statusCode: 400,
   statusMessage: 'Bad request',
 })
 
-// ErrUnsupportedMethod is used to throw when a resource is not found
+// Throw when HTTP method is not allowed
 export const ErrUnsupportedMethod = createError({
   statusCode: 405,
   statusMessage: 'Unsupported method',
 })
 
-// ErrInternalServer is used to throw when a resource is not found
+// Throw when server encounters an error
 export const ErrInternalServer = createError({
   statusCode: 500,
   statusMessage: 'Internal server error',
 })
 
-// ErrNoParamId is used to throw when a resource is not found
+// Throw when required ID parameter is missing
 export const ErrNoParamId = createError({
   statusCode: 400,
   statusMessage: 'No param id',

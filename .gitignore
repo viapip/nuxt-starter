@@ -23,10 +23,3 @@ logs
 .env
 .env.*
 !.env.example
-
-# EdgeDb
-**/*.edgeql.ts
-dbschema/queries.*
-dbschema/query-builder
-dbschema/interfaces.ts
-queries/*.query.ts
