@@ -75,7 +75,6 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/partytown',
     '@nuxtjs/tailwindcss',
-    'nuxt-content-assets',
     '@nuxtjs/mdc',
     '@nuxtjs/i18n',
     '@vueuse/nuxt',
@@ -88,24 +87,9 @@ export default defineNuxtConfig({
   ],
 
   content: {
-    experimental: {
-      clientDB: true,
-    },
-    locales: ['ru', 'en'],
-    navigation: {
-      fields: [
-        'title',
-        'description',
-        'image',
-        'tags',
-        'slug',
-      ],
-    },
-    sources: {
-      content: {
-        base: join(srcDir, 'content'),
-        driver: 'fs',
-        prefix: '/content',
+    build: {
+      markdown: {
+        toc: { depth: 3 },
       },
     },
   },
@@ -123,7 +107,7 @@ export default defineNuxtConfig({
   i18n: {
     customRoutes: 'config',
     defaultLocale: 'ru',
-    lazy: true,
+    restructureDir: 'i18n',
     routesNameSeparator: '___',
     strategy: 'no_prefix',
 
@@ -133,8 +117,6 @@ export default defineNuxtConfig({
       cookieKey: 'lang',
       useCookie: true,
     },
-
-    langDir: 'languages',
 
     bundle: {
       dropMessageCompiler: false,

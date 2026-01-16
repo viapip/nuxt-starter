@@ -1,19 +1,15 @@
-import type { ProviderGetImage } from '@nuxt/image'
-
+import { defineProvider } from '@nuxt/image/runtime'
 import { joinURL } from 'ufo'
 
-export const getImage: ProviderGetImage = (src, options) => {
-  let { baseURL } = options
+const DEFAULT_BASE_URL = 'https://avatars.githubusercontent.com/u/'
 
-  if (!baseURL) {
-    baseURL = 'https://avatars.githubusercontent.com/u/'
-  }
-
-  return {
-    format: 'webp',
-    url: joinURL(baseURL, src),
-  }
-}
-
-export const validateDomains = true
-export const supportsAlias = true
+export default defineProvider({
+  getImage(src, { modifiers: _modifiers }) {
+    return {
+      format: 'webp',
+      url: joinURL(DEFAULT_BASE_URL, src),
+    }
+  },
+  supportsAlias: true,
+  validateDomains: true,
+})
